@@ -1,44 +1,56 @@
-// Using Ollama for local AI (free alternative)
-async function GenerateContent(prompt) {
-    try {
-        console.log("Using Ollama local AI...");
-        
-        const response = await fetch('http://localhost:11434/api/generate', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                model: "codellama:7b", // Better for code review
-                prompt: `You are a helpful code reviewer. Please review this code and provide constructive feedback: ${prompt}`,
-                stream: false
-            })
-        });
 
-        if (!response.ok) {
-            throw new Error(`Ollama API error: ${response.status}`);
-        }
+import axios from 'axios';
 
-        const data = await response.json();
-        const result = data.response;
-        console.log("AI Response:", result);
-        
-        return result;
-        
-    } catch (error) {
-        console.error("Error in GenerateContent:", error);
-        
-        // Fallback to a simple response if Ollama isn't running
-        return `Code Review for: ${prompt}
+async function reviewCode(code) {
+  try {
+    console.log("Using local Mistral 7B model...");
 
-This appears to be a simple function. Here are some suggestions:
-1. Consider adding input validation
-2. Add JSDoc comments for better documentation
-3. Consider edge cases and error handling
-4. Ensure the function follows your project's coding standards
+    const response = await axios.post('http://localhost:11434/api/generate', {
+      model: "mistral:7b",
+      prompt: `You are an expert software engineer and code reviewer. Please review the following code thoroughly and provide detailed feedback including:
 
-Note: Install Ollama for more detailed AI-powered reviews.`;
+1. Code quality assessment
+2. Potential bugs or issues
+3. Performance improvements
+4. Best practices suggestions
+5. Security considerations (if applicable)
+
+Code to review:
+\`\`\`
+${code}
+\`\`\`
+
+Please provide a comprehensive code review:`,
+      stream: false,
+      options: {
+        temperature: 0.7,
+        top_p: 0.9,
+        max_tokens: 1000
+      }
+    }, {
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
+
+    console.log("Mistral API Response received");
+    
+    if (response.data && response.data.response) {
+      return response.data.response.trim();
+    } else {
+      throw new Error("Invalid response format from Mistral model");
     }
+    
+  } catch (error) {
+    console.error("Local Mistral API Error:", error.message);
+    
+    // Check if it's a connection error (Ollama not running)
+    if (error.code === 'ECONNREFUSED' || error.message.includes('connect')) {
+      throw new Error("Local Mistral model is not running. Please start Ollama with: ollama run mistral:7b");
+    }
+    
+    throw new Error(`Local AI model error: ${error.message}`);
+  }
 }
 
-export { GenerateContent }
+export default reviewCode;

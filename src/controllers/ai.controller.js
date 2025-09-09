@@ -1,40 +1,25 @@
-import { GenerateContent } from "../services/ai.services.js"
+import reviewCode from "../services/ai.services.js"
 
 
 
-
-const getreview = async(req , res) =>{
+const generateReview = async (req, res) => {
     try {
-         const {prompt} = req.body
-         console.log(req.body);
-         
+        const { code } = req.body;
+        console.log("Received code:", code);
 
-              if (!prompt) {
-            return res.status(400).json({
-                success: false,
-                message: "Prompt is required",
-            });
+        if (!code) {
+            return res.status(400).json({ error: 'Code is required' });
         }
 
+        const review = await reviewCode(code);
+        console.log("Generated review:", review);
+        
+        res.json({ review });    
 
-     const content = await GenerateContent(prompt)
-     console.log(content);
-     
-
-     res.status(200).json({
-      success: true,
-      review: content,
-    });
-
-  
     } catch (error) {
-         console.error("Error in getreview:", error);
-    res.status(500).json({
-      success: false,
-      message: "Something went wrong while reviewing the code",
-      error: error.message,
-    });
+        console.log("Error in generateReview:", error);
+        res.status(500).json({ error: 'Failed to review code' });
     }
 }
 
-export {getreview}
+export {generateReview}

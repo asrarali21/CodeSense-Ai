@@ -1,12 +1,12 @@
 import { Router } from "express";
-import { getreview } from "../controllers/ai.controller.js";
+import { generateReview } from "../controllers/ai.controller.js";
 
 
 
 const airouter = Router()
 
 
-airouter.route("/review").post(getreview)
+airouter.route("/review").post(generateReview)
 
 
 
