@@ -1,0 +1,80 @@
+import { User } from "../models/User.model.js";
+import { ApiError } from "../utils/ApiError.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
+import { asyncHandler } from "../utils/AsyncHandler.js";
+
+
+
+
+const RegisterUser = asyncHandler(async()=>{
+    const {firstName , lastName , email , password} = req.body
+
+
+    if (!firstName || !lastName || !email || !password) {
+        throw new ApiError(400 , "all feilds are required")
+    }
+  
+
+    const user = await User.create({
+        firstName , 
+        lastName , 
+        email , 
+        password
+    })
+
+    
+    res.status(200)
+    .json(new ApiResponse(200 , user , "User Register Successfully"))
+})
+
+
+
+const loginUser = asyncHandler(async()=>{
+    const {email , password} = req.body
+
+    if (!email || !password) {
+        throw new ApiError(400 , "all feilds are required")
+    }
+
+    const user = await User.find({email})
+
+
+    const ValidatePassword = user.IsPasswordCorrect(password)
+
+   if (!ValidatePassword) {
+    throw new ApiError(401 , "Incorrect Password")
+   }
+
+   const accessToken = user.generateAccessToken()
+   const refreshToken = user.generateRefreshToken()
+
+
+   const LoggedInUser = await User.findById(user._id).select("-password  -refreshToken")
+    
+    const options ={
+      httpOnly : true,
+      secure : true 
+    }
+   
+
+   res.status(200)
+   .cookie("accessToken" , accessToken , options)
+     .cookie("refreshToken" , refreshToken , options)
+   .json(new ApiResponse(200 ,LoggedInUser , "User LoggedIn Successfully" ))
+})
+
+
+const LogOutUser = asyncHandler(async()=>{
+
+    const options ={
+      httpOnly : true,
+      secure : true 
+    }
+        
+    res.status(200)
+    .clearCookie("accessToken" ,options) 
+    .clearCookie("refreshToken" , options) 
+    .json(new ApiResponse(200 , {} , "user logout successfully"))
+})
+
+export {RegisterUser , loginUser , LogOutUser}

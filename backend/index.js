@@ -1,11 +1,15 @@
 import 'dotenv/config'; // Load environment variables first
 import app from "./app.js";
+import connectDB from './src/db/db.js';
 
 
 
 
-app.listen(8000, () => {
-    console.log("server running on port");
-    console.log("HUGGING FACE API Key loaded:", process.env.HF_TOKEN ? "Yes" : "No")
-});
 
+connectDB().then(()=>{
+    app.listen(process.env.PORT , ()=>{
+        console.log(`the server is running on port ${process.env.PORT}`);
+    })
+}).catch((error)=>{
+     console.log("MongoDB error" , error);
+})
