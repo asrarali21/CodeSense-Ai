@@ -3,6 +3,10 @@ import { Link } from 'react-router-dom'
 
 
 function NavBar() {
+
+       
+
+
   return (
     <div>
         <header className="sticky top-0 z-10 border-b border-zinc-900/80 bg-zinc-950/70 backdrop-blur">
@@ -19,7 +23,7 @@ function NavBar() {
               <a href="#features" className="hover:text-zinc-200">Features</a>
               <a href="#why" className="hover:text-zinc-200">Why</a>
               <a href="#contact" className="hover:text-zinc-200">Contact</a>
-              <Link to="/review" className="rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-zinc-200 hover:bg-zinc-800">Open App</Link>
+              <Link to="/login" className="rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-zinc-200 hover:bg-zinc-800">LOGIN</Link>
             </nav>
           </div>
         </div>
