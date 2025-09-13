@@ -1,6 +1,7 @@
 import express from "express"
 import cors from "cors"
 import airouter from "./src/routes/ai.route.js"
+import UserRouter from "./src/routes/User.route.js";
 
 
 
@@ -16,6 +17,7 @@ app.use(express.json());
 
 
 app.use("/api/v1" , airouter)
+app.use("/api/v1/users" , UserRouter)
 
 
 export default app

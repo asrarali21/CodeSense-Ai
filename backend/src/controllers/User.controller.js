@@ -6,18 +6,18 @@ import { asyncHandler } from "../utils/AsyncHandler.js";
 
 
 
-const RegisterUser = asyncHandler(async()=>{
-    const {firstName , lastName , email , password} = req.body
+const RegisterUser = asyncHandler(async(req ,res)=>{
+    const {firstname , lastname , email , password} = req.body
 
 
-    if (!firstName || !lastName || !email || !password) {
+    if (!firstname || !lastname || !email || !password) {
         throw new ApiError(400 , "all feilds are required")
     }
   
 
     const user = await User.create({
-        firstName , 
-        lastName , 
+        firstname , 
+        lastname , 
         email , 
         password
     })
@@ -29,7 +29,7 @@ const RegisterUser = asyncHandler(async()=>{
 
 
 
-const loginUser = asyncHandler(async()=>{
+const loginUser = asyncHandler(async(req,res)=>{
     const {email , password} = req.body
 
     if (!email || !password) {
@@ -64,7 +64,7 @@ const loginUser = asyncHandler(async()=>{
 })
 
 
-const LogOutUser = asyncHandler(async()=>{
+const LogOutUser = asyncHandler(async(req,res)=>{
 
     const options ={
       httpOnly : true,
