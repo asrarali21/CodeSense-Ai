@@ -1,6 +1,30 @@
-import React from 'react'
+import axios from 'axios'
+import React, { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 
 function Login() {
+    const navigate = useNavigate()
+
+    const [loginInfo , setLoginInfo] = useState({
+      email : "",
+      password:""
+    })
+    console.log(loginInfo);
+    
+  const handleClick = async()=>{
+    try {
+      const response = await axios.post("http://localhost:8000/api/v1/users/login")
+      console.log(response);
+     setTimeout(() => {
+       navigate("/")
+     }, 1000);
+    } catch (error) {
+      console.log(error);
+      
+    }
+  }  
+
+
   return (
     <div className="relative min-h-screen overflow-hidden bg-zinc-950 text-zinc-200 antialiased">
       {/* Ambient glows */}
@@ -27,7 +51,7 @@ function Login() {
               </div>
 
               {/* Form */}
-              <form className="space-y-4">
+              <form className="space-y-4" onSubmit={handleClick}>
                 {/* Email */}
                 <div className="space-y-2">
                   <label htmlFor="email" className="text-xs text-zinc-400">Email address</label>
@@ -37,6 +61,8 @@ function Login() {
                     autoComplete="email"
                     placeholder="you@example.com"
                     className="h-11 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 text-sm text-zinc-200 placeholder-zinc-500 outline-none ring-0 transition focus:border-zinc-700 focus:ring-2 focus:ring-indigo-500"
+                    value={loginInfo.email}
+                    onChange={(e)=>setLoginInfo(e.target.value)}
                   />
                 </div>
 
@@ -53,6 +79,8 @@ function Login() {
                       autoComplete="current-password"
                       placeholder="••••••••"
                       className="h-11 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 pr-16 text-sm text-zinc-200 placeholder-zinc-500 outline-none ring-0 transition focus:border-zinc-700 focus:ring-2 focus:ring-indigo-500"
+                      value={loginInfo.password}
+                      onChange={(e)=>setLoginInfo(e.target.value)}
                     />
                     <button type="button" className="absolute inset-y-0 right-1 my-1 rounded-md border border-zinc-800 bg-zinc-900 px-2 text-[11px] text-zinc-400 hover:bg-zinc-800">
                       Show
@@ -71,7 +99,8 @@ function Login() {
 
                 {/* Submit */}
                 <button
-                  type="button"
+                 
+                  type="submit"
                   className="mt-2 cursor-pointer inline-flex w-full items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 >
                   Login
@@ -84,7 +113,7 @@ function Login() {
           </div>
 
           {/* Small note */}
-          <div className="mt-6 text-center text-[11px] text-zinc-500">Need an account? <a href="#" className="text-zinc-300 hover:underline">Create one</a></div>
+          <div className="mt-6 text-center text-[11px] text-zinc-500">Need an account? <Link to={"/signup"} className="text-zinc-300 hover:underline">Create one</Link></div>
         </div>
       </div>
     </div>

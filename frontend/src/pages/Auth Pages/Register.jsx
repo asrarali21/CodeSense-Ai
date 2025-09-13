@@ -1,6 +1,38 @@
-import React from 'react'
+import axios from 'axios'
+import React, { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 
 function Register() {
+
+   const [signupInfo , setSignUp] = useState({
+    firstname :"",
+    lastname :"",
+    email :"",
+    password :""
+   })
+
+   const navigate = useNavigate()
+console.log(signupInfo);
+
+    const handleChange = async (e)=>{
+      const {name , value} = e.target;
+      setSignUp(prev => ({...prev , [name] : value}))
+        }
+
+  const handleClick = async(e)=>{
+    e.preventDefault()
+try {
+      const response = await axios.post("http://localhost:8000/api/v1/users/register", signupInfo)
+      console.log(response);
+      navigate("/")
+} catch (error) {
+  console.log(error); 
+}
+    
+  }
+
+
+
   return (
     <div className="relative min-h-screen overflow-hidden bg-zinc-950 text-zinc-200 antialiased">
       {/* Ambient glows */}
@@ -27,17 +59,34 @@ function Register() {
               </div>
 
               {/* Form */}
-              <form className="space-y-4">
+              <form className="space-y-4" onSubmit={handleClick}>
                 {/* Name */}
                 <div className="space-y-2">
-                  <label htmlFor="name" className="text-xs text-zinc-400">Full name</label>
+                  <label htmlFor="name" className="text-xs text-zinc-400">First name</label>
                   <input
-                    id="name"
+                    id="firstName"
                     type="text"
+                    name='firstname'
                     autoComplete="name"
                     placeholder="Jane Doe"
                     className="h-11 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 text-sm text-zinc-200 placeholder-zinc-500 outline-none ring-0 transition focus:border-zinc-700 focus:ring-2 focus:ring-indigo-500"
+                    value={signupInfo.firstname}
+                    onChange={handleChange}
                   />
+                </div>
+
+                  <div className="space-y-2">
+                  <label htmlFor="name" className="text-xs text-zinc-400">Last name</label>
+                  <input
+                    id="lastName"
+                    type="text"
+                    name='lastname'
+                    autoComplete="name"
+                    placeholder="Jane Doe"
+                    className="h-11 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 text-sm text-zinc-200 placeholder-zinc-500 outline-none ring-0 transition focus:border-zinc-700 focus:ring-2 focus:ring-indigo-500"
+                     value={signupInfo.lastname}
+                   onChange={handleChange}
+                 />
                 </div>
 
                 {/* Email */}
@@ -46,9 +95,12 @@ function Register() {
                   <input
                     id="email"
                     type="email"
+                    name='email'
                     autoComplete="email"
                     placeholder="you@example.com"
                     className="h-11 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 text-sm text-zinc-200 placeholder-zinc-500 outline-none ring-0 transition focus:border-zinc-700 focus:ring-2 focus:ring-indigo-500"
+                            value={signupInfo.email}
+                    onChange={handleChange}
                   />
                 </div>
 
@@ -58,59 +110,22 @@ function Register() {
                   <input
                     id="password"
                     type="password"
+                    name='password'
                     autoComplete="new-password"
                     placeholder="••••••••"
                     className="h-11 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 text-sm text-zinc-200 placeholder-zinc-500 outline-none ring-0 transition focus:border-zinc-700 focus:ring-2 focus:ring-indigo-500"
-                  />
-                  {/* Visual strength (static) */}
-                  <div className="mt-1 h-1 w-full rounded bg-zinc-800">
-                    <div className="h-1 w-1/3 rounded bg-indigo-600"></div>
-                  </div>
-                </div>
-
-                {/* Confirm Password */}
-                <div className="space-y-2">
-                  <label htmlFor="confirm" className="text-xs text-zinc-400">Confirm password</label>
-                  <input
-                    id="confirm"
-                    type="password"
-                    autoComplete="new-password"
-                    placeholder="••••••••"
-                    className="h-11 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 text-sm text-zinc-200 placeholder-zinc-500 outline-none ring-0 transition focus:border-zinc-700 focus:ring-2 focus:ring-indigo-500"
-                  />
-                </div>
-
-                {/* Terms */}
-                <div className="flex items-start gap-3 pt-1">
-                  <input type="checkbox" id="terms" className="mt-0.5 size-4 rounded border-zinc-700 bg-zinc-950 text-indigo-600 focus:ring-indigo-500" />
-                  <label htmlFor="terms" className="text-xs text-zinc-400">I agree to the <a href="#" className="text-zinc-300 hover:underline">Terms</a> and <a href="#" className="text-zinc-300 hover:underline">Privacy</a>.</label>
+                     value={signupInfo.password}
+                   onChange={handleChange}
+                 />
                 </div>
 
                 {/* Submit */}
                 <button
-                  type="button"
+                  type="submit"
                   className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 >
                   Create account
                 </button>
-
-                {/* Divider */}
-                <div className="relative py-2">
-                  <div className="h-px w-full bg-zinc-800" />
-                  <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-zinc-900/60 px-2 text-[10px] text-zinc-500">or</span>
-                </div>
-
-                {/* Providers (visual only) */}
-                <div className="grid grid-cols-2 gap-3">
-                  <button type="button" className="inline-flex items-center justify-center gap-2 rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-200 transition hover:bg-zinc-800">
-                    <span className="h-4 w-4 rounded bg-zinc-800" />
-                    GitHub
-                  </button>
-                  <button type="button" className="inline-flex items-center justify-center gap-2 rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-200 transition hover:bg-zinc-800">
-                    <span className="h-4 w-4 rounded bg-zinc-800" />
-                    Google
-                  </button>
-                </div>
               </form>
 
               {/* Footnote */}
@@ -121,7 +136,7 @@ function Register() {
           </div>
 
           {/* Small note */}
-          <div className="mt-6 text-center text-[11px] text-zinc-500">Already have an account? <a href="#" className="text-zinc-300 hover:underline">Sign in</a></div>
+          <div className="mt-6 text-center text-[11px] text-zinc-500">Already have an account? <Link to={"/login"} className="text-zinc-300 hover:underline">Sign in</Link></div>
         </div>
       </div>
     </div>
