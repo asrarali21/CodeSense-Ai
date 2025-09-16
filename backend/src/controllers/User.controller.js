@@ -36,7 +36,13 @@ const loginUser = asyncHandler(async(req,res)=>{
         throw new ApiError(400 , "all feilds are required")
     }
 
-    const user = await User.find({email})
+    const user = await User.findOne({email})
+
+
+    if (!user) {
+        throw new ApiError(401 , "user doesnt exist")
+    }
+
 
 
     const ValidatePassword = user.IsPasswordCorrect(password)
@@ -59,7 +65,7 @@ const loginUser = asyncHandler(async(req,res)=>{
 
    res.status(200)
    .cookie("accessToken" , accessToken , options)
-     .cookie("refreshToken" , refreshToken , options)
+   .cookie("refreshToken" , refreshToken , options)
    .json(new ApiResponse(200 ,LoggedInUser , "User LoggedIn Successfully" ))
 })
 
