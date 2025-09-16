@@ -1,26 +1,39 @@
 import axios from 'axios'
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useRecoilState } from 'recoil'
+import { AuthState } from '../../store/auth.state'
 
 function Login() {
     const navigate = useNavigate()
+
+  const [auth, setAuth] = useRecoilState(AuthState)
 
     const [loginInfo , setLoginInfo] = useState({
       email : "",
       password:""
     })
     console.log(loginInfo);
+
+
+    const handleChange = async(e)=>{
+      const {name , value} = e.target;
+
+      setLoginInfo(prev =>({...prev , [name] : value}))
+    }
     
-  const handleClick = async()=>{
+  const handleClick = async(e)=>{
+
+    e.preventDefault()
     try {
-      const response = await axios.post("http://localhost:8000/api/v1/users/login")
+      const response = await axios.post("http://localhost:8000/api/v1/users/login" , loginInfo , {withCredentials:true})
       console.log(response);
      setTimeout(() => {
        navigate("/")
      }, 1000);
+     setAuth({IsloggedIn:true , user:response.data.data})
     } catch (error) {
       console.log(error);
-      
     }
   }  
 
@@ -59,10 +72,11 @@ function Login() {
                     id="email"
                     type="email"
                     autoComplete="email"
+                    name='email'
                     placeholder="you@example.com"
                     className="h-11 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 text-sm text-zinc-200 placeholder-zinc-500 outline-none ring-0 transition focus:border-zinc-700 focus:ring-2 focus:ring-indigo-500"
                     value={loginInfo.email}
-                    onChange={(e)=>setLoginInfo(e.target.value)}
+                    onChange={handleChange}
                   />
                 </div>
 
@@ -76,11 +90,12 @@ function Login() {
                     <input
                       id="password"
                       type="password"
+                      name='password'
                       autoComplete="current-password"
                       placeholder="••••••••"
                       className="h-11 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 pr-16 text-sm text-zinc-200 placeholder-zinc-500 outline-none ring-0 transition focus:border-zinc-700 focus:ring-2 focus:ring-indigo-500"
                       value={loginInfo.password}
-                      onChange={(e)=>setLoginInfo(e.target.value)}
+                  onChange={handleChange}
                     />
                     <button type="button" className="absolute inset-y-0 right-1 my-1 rounded-md border border-zinc-800 bg-zinc-900 px-2 text-[11px] text-zinc-400 hover:bg-zinc-800">
                       Show

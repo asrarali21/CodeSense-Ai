@@ -1,8 +1,27 @@
 import React from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { useRecoilState } from 'recoil'
+import { AuthState } from '../store/auth.state'
+import axios from 'axios'
 
 
 function NavBar() {
+   
+  const navigate = useNavigate()
+   const [auth ,setauth] = useRecoilState(AuthState)
+
+
+
+  const handleLogout = async () => {
+    try {
+      await axios.post('http://localhost:8000/api/v1/users/logout', {}, { withCredentials: true })
+      navigate("/login")
+    } catch (error) {
+      console.error(error)
+    } finally {
+      setauth({ IsloggedIn: false, user: null })
+    }
+  }
 
        
 
@@ -23,7 +42,13 @@ function NavBar() {
               <a href="#features" className="hover:text-zinc-200">Features</a>
               <a href="#why" className="hover:text-zinc-200">Why</a>
               <a href="#contact" className="hover:text-zinc-200">Contact</a>
-              <Link to="/login" className="rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-zinc-200 hover:bg-zinc-800">LOGIN</Link>
+{  auth.IsloggedIn ? (
+         <button onClick={handleLogout} className="rounded-lg border cursor-pointer border-zinc-800 bg-zinc-900 px-3 py-2 text-zinc-200 hover:bg-zinc-800">Logout</button>
+) : (
+  <Link to={"/login"} className="rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-zinc-200 hover:bg-zinc-800">LOGIN</Link>
+)
+}
+       
             </nav>
           </div>
         </div>
