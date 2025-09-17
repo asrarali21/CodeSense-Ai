@@ -22,7 +22,7 @@ console.log(signupInfo);
   const handleClick = async(e)=>{
     e.preventDefault()
 try {
-      const response = await axios.post("http://localhost:8000/api/v1/users/register", signupInfo)
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/v1/users/register`, signupInfo)
       console.log(response);
       navigate("/")
 } catch (error) {
