@@ -9,8 +9,10 @@ import { errorHandler } from "./src/middlewares/error.middleware.js";
 
 const app = express()
 
+app.set('trust proxy', 1)
+
  app.use(cors({
-            origin: 'http://localhost:5173', // Allow requests from this origin
+            origin: process.env.CORS_ORIGIN, // Allow requests from this origin
             methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allowed HTTP methods
             allowedHeaders: ['Content-Type', 'Authorization'], // Allowed request headers
             credentials: true // Allow sending of cookies and authorization headers
