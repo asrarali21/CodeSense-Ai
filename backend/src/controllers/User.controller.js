@@ -22,7 +22,6 @@ const RegisterUser = asyncHandler(async(req ,res)=>{
         password
     })
 
-    
     res.status(200)
     .json(new ApiResponse(200 , user , "User Register Successfully"))
 })
@@ -42,7 +41,6 @@ const loginUser = asyncHandler(async(req,res)=>{
     if (!user) {
         throw new ApiError(401 , "user doesnt exist")
     }
-
 
 
     const ValidatePassword = user.IsPasswordCorrect(password)
