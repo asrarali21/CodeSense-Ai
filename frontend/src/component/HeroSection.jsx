@@ -13,7 +13,7 @@ function HeroSection() {
                 Build better code with a <span className="bg-gradient-to-r from-indigo-400 via-fuchsia-400 to-emerald-400 bg-clip-text text-transparent">minimal AI</span>
               </h2>
               <p className="mt-4 max-w-xl text-sm leading-relaxed text-zinc-400">
-                CodeSense AI delivers precise, elegant insights. A calm, luxurious interface that helps you review, refactor, and reason about code—without the noise.
+                Minimal AI delivers precise, elegant insights. A calm, luxurious interface that helps you review, refactor, and reason about code—without the noise.
               </p>
               <div className="mt-8 flex flex-wrap items-center gap-3">
                 <Link to="/review" className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500">

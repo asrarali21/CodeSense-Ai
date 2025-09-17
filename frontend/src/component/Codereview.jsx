@@ -6,7 +6,7 @@ function Codereview() {
   // Input state
   const [codeInput , SetCodeInput] = useState("")
   const [review , setReview] = useState("")
-  const [selectedLanguage , setSelectedLanguage] = useState('auto')
+  
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [copied, setCopied] = useState(false)
@@ -17,7 +17,7 @@ function Codereview() {
     setError(null)
     setReview("")
     try {
-      const response = await axios.post("http://localhost:8000/api/v1/review" , { code: codeInput, language: selectedLanguage })
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/v1/review`, { code: codeInput })
       setReview(response?.data?.review || "")
     } catch (err) {
       setError("Failed to fetch review. Ensure backend is running.")
@@ -48,7 +48,7 @@ function Codereview() {
     }
     window.addEventListener('keydown', kb)
     return () => window.removeEventListener('keydown', kb)
-  }, [codeInput, selectedLanguage])
+  }, [codeInput])
 
   const handleCopy = async () => {
     if (!review) return
@@ -65,29 +65,142 @@ function Codereview() {
     words: review.trim().split(/\s+/).length
   } : null
 
+  // Enhanced renderer: headings (including "Overall Assessment:"), lists, blockquotes, fenced code
   const renderReview = () => {
     if (!review) return null
-    // Basic formatting: split into sections by double newline
-    const blocks = review.split(/\n{2,}/)
+
+    const elements = []
+    const lines = review.split('\n')
+
+    let para = []
+    let list = []
+    let listOrdered = false
+    let inCode = false
+    let codeLang = ''
+    let codeLines = []
+
+    const flushPara = () => {
+      if (para.length) {
+        elements.push(
+          <p key={`p-${elements.length}`} className="leading-relaxed text-sm text-zinc-300">
+            {para.join(' ')}
+          </p>
+        )
+        para = []
+      }
+    }
+    const flushList = () => {
+      if (list.length) {
+        const ListTag = listOrdered ? 'ol' : 'ul'
+        elements.push(
+          React.createElement(
+            ListTag,
+            { key: `l-${elements.length}`, className: listOrdered ? 'list-decimal pl-5 space-y-1' : 'list-disc pl-5 space-y-1' },
+            list.map((item, idx) => (
+              <li key={idx} className="leading-snug">{item}</li>
+            ))
+          )
+        )
+        list = []
+        listOrdered = false
+      }
+    }
+    const flushCode = () => {
+      if (codeLines.length) {
+        elements.push(
+          <pre key={`code-${elements.length}`} className="not-prose overflow-x-auto rounded-lg border border-zinc-800 bg-zinc-950/70 p-4 text-xs text-zinc-200">
+            <code className={`language-${codeLang}`}>{codeLines.join('\n')}</code>
+          </pre>
+        )
+        codeLines = []
+        codeLang = ''
+      }
+    }
+    const flushAll = () => { flushCode(); flushList(); flushPara(); }
+
+    for (const raw of lines) {
+      const line = raw
+
+      // Code fence start/end
+      const fence = line.trim().match(/^```(.*)?$/)
+      if (fence) {
+        if (inCode) {
+          flushCode()
+          inCode = false
+        } else {
+          flushPara(); flushList()
+          inCode = true
+          codeLang = (fence[1] || '').trim().toLowerCase()
+        }
+        continue
+      }
+      if (inCode) { codeLines.push(raw); continue }
+
+      // Blank line -> break paragraph/list
+      if (!line.trim()) { flushAll(); continue }
+
+      // Blockquote -> callout
+      if (line.trim().startsWith('>')) {
+        flushAll()
+        elements.push(
+          <div key={`callout-${elements.length}`} className="rounded-md border border-indigo-800/30 bg-indigo-950/20 px-3 py-2 text-[13px] text-indigo-200">
+            {line.replace(/^>\s?/, '')}
+          </div>
+        )
+        continue
+      }
+
+      // Markdown hash headings
+      const h = line.match(/^(#{1,6})\s+(.*)$/)
+      if (h) {
+        flushAll()
+        const level = h[1].length
+        const text = h[2].trim()
+        const HTag = level <= 2 ? 'h3' : 'h4'
+        elements.push(
+          React.createElement(HTag, { key: `h-${elements.length}`, className: 'mt-6 text-zinc-100 tracking-tight text-sm font-semibold' }, text)
+        )
+        continue
+      }
+
+      // Common section titles including "Overall Assessment:" style or bold titles
+      const colonTitle = line.trim().match(/^\*\*(.+?)\*\*:?$|^([A-Z][\w\s]+?):\s*$/)
+      if (colonTitle) {
+        flushAll()
+        const title = (colonTitle[1] || colonTitle[2] || '').trim()
+        elements.push(
+          <h3 key={`h-${elements.length}`} className="mt-6 text-zinc-100 tracking-tight text-sm font-semibold">{title}</h3>
+        )
+        continue
+      }
+
+      if (/^(Summary|Overview|Conclusion|Suggestions|Recommendations)[:]?$/.test(line.trim())) {
+        flushAll()
+        elements.push(
+          <h3 key={`h-${elements.length}`} className="mt-6 text-zinc-100 tracking-tight text-sm font-semibold">{line.trim().replace(/:$/, '')}</h3>
+        )
+        continue
+      }
+
+      // Lists
+      const lm = line.trim().match(/^([0-9]+\.|[-*])\s+(.*)$/)
+      if (lm) {
+        if (para.length) flushPara()
+        const ordered = /^\d+\./.test(lm[1])
+        if (list.length && listOrdered !== ordered) flushList()
+        listOrdered = ordered
+        list.push(lm[2])
+        continue
+      }
+
+      // Default -> paragraph text
+      para.push(line.trim())
+    }
+    flushAll()
+
     return (
-      <article className="prose prose-invert max-w-none prose-pre:bg-zinc-900 prose-pre:border prose-pre:border-zinc-800 prose-code:text-indigo-300">
-        {blocks.map((block, i) => {
-          // List detection
-          const lines = block.split('\n')
-          const allList = lines.every(l => /^([0-9]+\.|[-*])\s+/.test(l.trim()))
-          if (allList) {
-            return (
-              <ul key={i} className="list-disc pl-5 space-y-1">
-                {lines.map((l, idx) => <li key={idx} className="leading-snug">{l.replace(/^([0-9]+\.|[-*])\s+/, '')}</li>)}
-              </ul>
-            )
-          }
-          // Heading detection
-          if (/^(Summary|Overview|Conclusion|Suggestions|Recommendations)[:]?$/i.test(block.trim())) {
-            return <h3 key={i} className="mt-6 text-zinc-100 tracking-tight text-sm font-semibold">{block.trim().replace(/:$/, '')}</h3>
-          }
-          return <p key={i} className="leading-relaxed text-sm text-zinc-300">{block}</p>
-        })}
+      <article className="prose prose-invert max-w-none prose-pre:bg-zinc-900 prose-pre:border prose-pre:border-zinc-800 prose-code:text-indigo-300 prose-strong:text-zinc-100 prose-li:marker:text-zinc-500">
+        {elements}
       </article>
     )
   }
@@ -125,19 +238,6 @@ function Codereview() {
                 <div>
                   <h2 className="text-base font-medium text-zinc-100">Paste your code</h2>
                   <p className="text-xs text-zinc-500">Quality • Bugs • Performance • Security</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <select aria-label="Language" value={selectedLanguage} onChange={(e)=>setSelectedLanguage(e.target.value)} className="rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-xs text-zinc-300 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                    <option value="auto">Auto</option>
-                    <option value="javascript">JavaScript</option>
-                    <option value="typescript">TypeScript</option>
-                    <option value="python">Python</option>
-                    <option value="java">Java</option>
-                    <option value="go">Go</option>
-                    <option value="rust">Rust</option>
-                    <option value="php">PHP</option>
-                    <option value="csharp">C#</option>
-                  </select>
                 </div>
               </div>
 
@@ -201,28 +301,37 @@ function Codereview() {
             <div className="p-6">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <h2 className="text-base font-medium text-zinc-100">AI Review</h2>
+                  <h2 className="text-base font-semibold tracking-tight bg-gradient-to-r from-zinc-100 to-zinc-300 bg-clip-text text-transparent">AI Review</h2>
                   <p className="text-xs text-zinc-500">Actionable feedback will appear here.</p>
                 </div>
                 <div className="flex items-center gap-2">
                   {stats && (
                     <div className="flex gap-2 text-[10px] text-zinc-500">
-                      <span className="rounded border border-zinc-800 bg-zinc-900 px-2 py-1">{stats.lines} ln</span>
-                      <span className="rounded border border-zinc-800 bg-zinc-900 px-2 py-1">{stats.words} wd</span>
-                      <span className="rounded border border-zinc-800 bg-zinc-900 px-2 py-1">{stats.chars} ch</span>
+                      <span className="rounded-md border border-zinc-700 bg-zinc-800/60 px-2 py-1">{stats.lines} ln</span>
+                      <span className="rounded-md border border-zinc-700 bg-zinc-800/60 px-2 py-1">{stats.words} wd</span>
+                      <span className="rounded-md border border-zinc-700 bg-zinc-800/60 px-2 py-1">{stats.chars} ch</span>
                     </div>
                   )}
                   <button
                     onClick={handleCopy}
                     disabled={!review}
-                    className="rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-1.5 text-[11px] font-medium text-zinc-300 transition hover:bg-zinc-800 disabled:opacity-30"
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-1.5 text-[11px] font-medium text-zinc-300 transition hover:bg-zinc-800 disabled:opacity-30"
                   >
-                    {copied ? 'Copied' : 'Copy'}
+                    {!copied ? (
+                      <>
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-3.5 w-3.5 opacity-80"><path d="M8 7a1 1 0 0 1 1-1h8a3 3 0 0 1 3 3v8a1 1 0 1 1-2 0V9a1 1 0 0 0-1-1H9a1 1 0 0 1-1-1Z"/><path d="M5 5a3 3 0 0 1 3-3h8a1 1 0 1 1 0 2H8a1 1 0 0 0-1 1v12a1 1 0 0 1-2 0V5Z"/></svg>
+                        Copy
+                      </>
+                    ) : 'Copied'}
                   </button>
                 </div>
               </div>
 
               <div id="review-output" className="mt-4 group relative overflow-hidden rounded-lg border border-zinc-800 bg-zinc-950/40 p-5">
+                {/* Subtle decorative glows */}
+                <div aria-hidden className="pointer-events-none absolute -top-28 right-0 h-40 w-40 rounded-full bg-indigo-500/10 blur-2xl" />
+                <div aria-hidden className="pointer-events-none absolute -bottom-28 -left-10 h-40 w-48 rounded-full bg-purple-500/5 blur-2xl" />
+
                 {/* States */}
                 {error && (
                   <div className="rounded border border-red-800/40 bg-red-950/40 px-4 py-3 text-xs text-red-300">
